@@ -1,0 +1,36 @@
+name: Build NetInfo EXE
+
+on:
+  workflow_dispatch:  # Lancement manuel depuis GitHub
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout du repo
+        uses: actions/checkout@v4
+
+      - name: Installer ps2exe
+        shell: powershell
+        run: |
+          Install-Module -Name ps2exe -Scope CurrentUser -Force -ErrorAction Stop
+
+      - name: Compiler netinfo_cpam.exe
+        shell: powershell
+        run: |
+          ps2exe .\netinfo_cpam.ps1 .\netinfo_cpam.exe -noConsole
+
+      - name: Compiler NetInfo_Light.exe
+        shell: powershell
+        run: |
+          ps2exe .\NetInfo_Light.ps1 .\NetInfo_Light.exe -noConsole
+
+      - name: Uploader les exe comme artefacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: NetInfo-EXE
+          path: |
+            netinfo_cpam.exe
+            NetInfo_Light.exe
+          retention-days: 7
