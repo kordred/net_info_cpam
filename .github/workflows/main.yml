@@ -1,7 +1,7 @@
 name: Build NetInfo EXE
 
 on:
-  workflow_dispatch:  # Lancement manuel depuis GitHub
+  workflow_dispatch:
 
 jobs:
   build:
@@ -19,12 +19,17 @@ jobs:
       - name: Compiler netinfo_cpam.exe
         shell: powershell
         run: |
-          ps2exe .\netinfo_cpam.ps1 .\netinfo_cpam.exe -noConsole
+          ps2exe .\netinfo_cpam.ps1 .\netinfo_cpam.exe -noConsole -iconFile ".\ico_wifi.ico"
+
+      - name: Compiler netinfo_cpam_antiV.exe
+        shell: powershell
+        run: |
+          ps2exe .\netinfo_cpam_antiV.ps1 .\netinfo_cpam_antiV.exe -noConsole -iconFile ".\ico_wifi.ico"
 
       - name: Compiler NetInfo_Light.exe
         shell: powershell
         run: |
-          ps2exe .\NetInfo_Light.ps1 .\NetInfo_Light.exe -noConsole
+          ps2exe .\NetInfo_Light.ps1 .\NetInfo_Light.exe -noConsole -iconFile ".\ico_network.ico"
 
       - name: Uploader les exe comme artefacts
         uses: actions/upload-artifact@v4
@@ -32,5 +37,6 @@ jobs:
           name: NetInfo-EXE
           path: |
             netinfo_cpam.exe
+            netinfo_cpam_antiV.exe
             NetInfo_Light.exe
           retention-days: 7
