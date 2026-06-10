@@ -437,6 +437,31 @@ function Update-UI {
     }
 }
 
+# ── Copier les infos ──────────────────────────────────────────────────────────
+function Copy-Infos {
+    if (-not $script:LastInfo) { return }
+    $n = $script:LastInfo
+    $internet = if ($n.InternetOK) { "Oui (IP publique : $($n.PublicIP))" } else { "Non" }
+    $txt = "=== Informations reseau ===" + [Environment]::NewLine
+    $txt += "Date        : " + (Get-Date -Format "dd/MM/yyyy HH:mm:ss") + [Environment]::NewLine
+    $txt += "Machine     : " + $n.Hostname + [Environment]::NewLine
+    $txt += "Utilisateur : " + $n.Username + [Environment]::NewLine
+    $txt += "Domaine     : " + $n.Domain + " (" + $n.DomainType + ")" + [Environment]::NewLine
+    $txt += "IP locale   : " + $n.LocalIP + [Environment]::NewLine
+    $txt += "Sous-reseau : " + $n.Mask + [Environment]::NewLine
+    $txt += "Passerelle  : " + $n.Gateway + [Environment]::NewLine
+    $txt += "DNS         : " + $n.DNS + [Environment]::NewLine
+    $txt += "MAC         : " + $n.MAC + [Environment]::NewLine
+    $txt += "Internet    : " + $internet + [Environment]::NewLine
+    $txt += "==========================="
+    [System.Windows.Clipboard]::SetText($txt)
+    $BtnCopy.Content = "Copie !"
+    $timer = New-Object System.Windows.Threading.DispatcherTimer
+    $timer.Interval = [TimeSpan]::FromSeconds(2)
+    $timer.Add_Tick({ $BtnCopy.Content = "Copier"; $timer.Stop() })
+    $timer.Start()
+}
+
 # ── Evenements ────────────────────────────────────────────────────────────────
 $window.Add_MouseLeftButtonDown({ $window.DragMove() })
 $BtnMin.Add_Click({ $window.WindowState = [Windows.WindowState]::Minimized })
