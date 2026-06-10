@@ -6,9 +6,6 @@ Add-Type -AssemblyName WindowsBase
 # ── Titre de la fenetre (modifiable ici) ─────────────────────────────────────
 $TitreFenetre = "Informations réseau — CPAM Loire-Atlantique"
 
-# ── Logo embarque en base64 ───────────────────────────────────────────────────
-$LogoB64 = ""
-
 # ── Collecte reseau ───────────────────────────────────────────────────────────
 function Get-NetworkInfo {
     $info = @{}
@@ -378,17 +375,17 @@ $TxtDomain    = $window.FindName("TxtDomain")
 $TxtDomainLabel = $window.FindName("TxtDomainLabel")
 $BtnCopy      = $window.FindName("BtnCopy")
 
-# ── Logo embarque ─────────────────────────────────────────────────────────────
+# ── Logo depuis fichier externe ──────────────────────────────────────────────
 try {
-    $bytes  = [Convert]::FromBase64String($LogoB64)
-    $stream = New-Object System.IO.MemoryStream($bytes, 0, $bytes.Length)
-    $bmp    = New-Object Windows.Media.Imaging.BitmapImage
-    $bmp.BeginInit()
-    $bmp.StreamSource  = $stream
-    $bmp.CacheOption   = [Windows.Media.Imaging.BitmapCacheOption]::OnLoad
-    $bmp.EndInit()
-    $stream.Close()
-    $ImgLogo.Source = $bmp
+    $logoPath = Join-Path (Split-Path -Parent $MyInvocation.MyCommand.Path) "logo_cpam.png"
+    if (Test-Path $logoPath) {
+        $bmp = New-Object Windows.Media.Imaging.BitmapImage
+        $bmp.BeginInit()
+        $bmp.UriSource  = [Uri]::new($logoPath)
+        $bmp.CacheOption = [Windows.Media.Imaging.BitmapCacheOption]::OnLoad
+        $bmp.EndInit()
+        $ImgLogo.Source = $bmp
+    }
 } catch { }
 $TxtTitre.Text = $TitreFenetre
 

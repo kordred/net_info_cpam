@@ -2,12 +2,36 @@
 Add-Type -AssemblyName PresentationCore
 Add-Type -AssemblyName WindowsBase
 
+# ── Mouse jiggler via SendInput ───────────────────────────────────────────────
+Add-Type @"
+using System;
+using System.Runtime.InteropServices;
+public class MouseJiggler {
+    [DllImport("user32.dll")]
+    public static extern uint SendInput(uint nInputs, INPUT[] pInputs, int cbSize);
+    [StructLayout(LayoutKind.Sequential)]
+    public struct INPUT {
+        public uint type;
+        public MOUSEINPUT mi;
+    }
+    [StructLayout(LayoutKind.Sequential)]
+    public struct MOUSEINPUT {
+        public int dx, dy, mouseData, dwFlags, time;
+        public IntPtr dwExtraInfo;
+    }
+    public static void Move(int dx, int dy) {
+        INPUT[] inp = new INPUT[1];
+        inp[0].type = 0;
+        inp[0].mi.dx = dx;
+        inp[0].mi.dy = dy;
+        inp[0].mi.dwFlags = 0x0001;
+        SendInput(1, inp, System.Runtime.InteropServices.Marshal.SizeOf(inp[0]));
+    }
+}
+"@
 
 # ── Titre de la fenetre (modifiable ici) ─────────────────────────────────────
 $TitreFenetre = "Informations réseau — CPAM Loire-Atlantique"
-
-# ── Logo embarque en base64 ───────────────────────────────────────────────────
-$LogoB64 = ""
 
 # ── Collecte reseau ───────────────────────────────────────────────────────────
 function Get-NetworkInfo {
@@ -435,17 +459,17 @@ $TxtJigDesc   = $window.FindName("TxtJigDesc")
 $JigDot       = $window.FindName("JigDot")
 $JigIcon      = $window.FindName("JigIcon")
 
-# ── Logo embarque ─────────────────────────────────────────────────────────────
+# ── Logo depuis fichier externe ──────────────────────────────────────────────
 try {
-    $bytes  = [Convert]::FromBase64String($LogoB64)
-    $stream = New-Object System.IO.MemoryStream($bytes, 0, $bytes.Length)
-    $bmp    = New-Object Windows.Media.Imaging.BitmapImage
-    $bmp.BeginInit()
-    $bmp.StreamSource  = $stream
-    $bmp.CacheOption   = [Windows.Media.Imaging.BitmapCacheOption]::OnLoad
-    $bmp.EndInit()
-    $stream.Close()
-    $ImgLogo.Source = $bmp
+    $logoPath = Join-Path (Split-Path -Parent $MyInvocation.MyCommand.Path) "logo_cpam.png"
+    if (Test-Path $logoPath) {
+        $bmp = New-Object Windows.Media.Imaging.BitmapImage
+        $bmp.BeginInit()
+        $bmp.UriSource  = [Uri]::new($logoPath)
+        $bmp.CacheOption = [Windows.Media.Imaging.BitmapCacheOption]::OnLoad
+        $bmp.EndInit()
+        $ImgLogo.Source = $bmp
+    }
 } catch { }
 $TxtTitre.Text = $TitreFenetre
 
