@@ -2,33 +2,8 @@
 Add-Type -AssemblyName PresentationCore
 Add-Type -AssemblyName WindowsBase
 
-# ── Mouse jiggler via SendInput ───────────────────────────────────────────────
-Add-Type @"
-using System;
-using System.Runtime.InteropServices;
-public class MouseJiggler {
-    [DllImport("user32.dll")]
-    public static extern uint SendInput(uint nInputs, INPUT[] pInputs, int cbSize);
-    [StructLayout(LayoutKind.Sequential)]
-    public struct INPUT {
-        public uint type;
-        public MOUSEINPUT mi;
-    }
-    [StructLayout(LayoutKind.Sequential)]
-    public struct MOUSEINPUT {
-        public int dx, dy, mouseData, dwFlags, time;
-        public IntPtr dwExtraInfo;
-    }
-    public static void Move(int dx, int dy) {
-        INPUT[] inp = new INPUT[1];
-        inp[0].type = 0;
-        inp[0].mi.dx = dx;
-        inp[0].mi.dy = dy;
-        inp[0].mi.dwFlags = 0x0001;
-        SendInput(1, inp, System.Runtime.InteropServices.Marshal.SizeOf(inp[0]));
-    }
-}
-"@
+# ── Mouse jiggler via System.Windows.Forms (pur PowerShell, sans C#) ────────
+Add-Type -AssemblyName System.Windows.Forms
 
 # ── Titre de la fenetre (modifiable ici) ─────────────────────────────────────
 $TitreFenetre = "Informations réseau — CPAM Loire-Atlantique"
@@ -555,9 +530,10 @@ function Set-JigState([bool]$active) {
             if (-not $script:JigActive) { return }
             $dx = $script:Rng.Next(3,8)
             $dy = $script:Rng.Next(3,8)
-            [MouseJiggler]::Move($dx, $dy)
+            $pos = [System.Windows.Forms.Cursor]::Position
+            [System.Windows.Forms.Cursor]::Position = New-Object System.Drawing.Point(($pos.X + $dx), ($pos.Y + $dy))
             Start-Sleep -Milliseconds 120
-            [MouseJiggler]::Move(-$dx, -$dy)
+            [System.Windows.Forms.Cursor]::Position = New-Object System.Drawing.Point(($pos.X), ($pos.Y))
             Schedule-NextJig
         })
         Schedule-NextJig
